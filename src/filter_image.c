@@ -8,18 +8,40 @@
 
 void l1_normalize(image im)
 {
-    // TODO
+    int sum = 0;
+    int maxIndex = im.w * im.h * im.c;
+
+    for (int i = 0; i < maxIndex; ++i)
+    {
+        sum += im.data[i];
+    }
+
+    for (int i = 0; i < maxIndex; ++i)
+    {
+        im.data[i] /= sum;
+    }
 }
 
 image make_box_filter(int w)
 {
-    // TODO
-    return make_image(1,1,1);
+    image new_image = make_image(w, w, 1);
+
+    for (int i = 0; i < new_image.h; ++i)
+    {
+        for(int j = 0; j < new_image.w; ++j)
+        {
+            set_pixel(new_image, j, i, 0, 1);
+        }
+    }
+
+    l1_normalize(new_image);
+
+    return new_image;
 }
 
 image convolve_image(image im, image filter, int preserve)
 {
-    // TODO
+    assert(im.c == filter.c || filter.c == 1);
     return make_image(1,1,1);
 }
 
