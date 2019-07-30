@@ -72,23 +72,16 @@ void scale_image(image im, int c, float v)
 
 void clamp_image(image im)
 {
-    int currIndex = 0;
-    for(int i = 0; i < im.h; ++i)
+    int max_index = im.h*im.w*im.c;
+    for(int i = 0; i < max_index ; ++i)
     {
-        for(int j = 0; j < im.w; ++j)
+        if (im.data[i] > 1)
         {
-            for(int c = 0; c < im.c; ++c)
-            {
-                currIndex = im.w * i + j + im.h * im.w * c;
-                if (im.data[currIndex] > 1)
-                {
-                    im.data[currIndex] = 1;
-                }
-                else if (im.data[currIndex] < 0)
-                {
-                    im.data[currIndex] = 0;
-                }
-            }
+            im.data[i] = 1;
+        }
+        else if (im.data[i] < 0)
+        {
+            im.data[i] = 0;
         }
     }
 }
