@@ -138,16 +138,27 @@ image make_emboss_filter()
     return filter;
 }
 
-// Question 2.2.1: Which of these filters should we use preserve when we run our convolution and which ones should we not? Why?
-// Answer: TODO
-
-// Question 2.2.2: Do we have to do any post-processing for the above filters? Which ones and why?
-// Answer: TODO
-
 image make_gaussian_filter(float sigma)
 {
-    // TODO
-    return make_image(1,1,1);
+    float multiplier = 1 / (TWOPI * pow(sigma, 2));
+    int six_sigma = 6 * sigma;
+
+    int size = (six_sigma % 2 ? six_sigma : six_sigma + 1);
+
+    image filter = make_image(size, size, 1);
+
+    for (int x = 0; x < size; ++x)
+    {
+        for (int y = 0; y < size; ++y)
+        {
+            float exponent = - (pow(x, 2) + pow(y, 2)) / (2 * pow(sigma, 2));
+            float value = multiplier * exp(exponent);
+            set_pixel(filter, x, y, 0, value);
+        }
+    }
+
+    l1_normalize(filter);
+    return filter;
 }
 
 image add_image(image a, image b)
