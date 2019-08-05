@@ -147,11 +147,13 @@ image make_gaussian_filter(float sigma)
 
     image filter = make_image(size, size, 1);
 
+    int centre = size/2;
+
     for (int x = 0; x < size; ++x)
     {
         for (int y = 0; y < size; ++y)
         {
-            float exponent = - (pow(x, 2) + pow(y, 2)) / (2 * pow(sigma, 2));
+            float exponent = - (pow(x-centre, 2) + pow(y- centre, 2)) / (2 * pow(sigma, 2));
             float value = multiplier * exp(exponent);
             set_pixel(filter, x, y, 0, value);
         }
@@ -163,37 +165,119 @@ image make_gaussian_filter(float sigma)
 
 image add_image(image a, image b)
 {
-    // TODO
-    return make_image(1,1,1);
+    assert(a.w == b.w && a.h == b.h && a.c == b.c);
+    image output_image = make_image(a.w, a.h, a.c);
+
+    int max_index = a.w * a.h * a.c;
+
+    for (int i = 0; i < max_index; ++i)
+    {
+        output_image.data[i] = a.data[i] + b.data[i];
+    }
+
+    return output_image;
 }
 
 image sub_image(image a, image b)
 {
-    // TODO
-    return make_image(1,1,1);
+    assert(a.w == b.w && a.h == b.h && a.c == b.c);
+    image output_image = make_image(a.w, a.h, a.c);
+
+    int max_index = a.w * a.h * a.c;
+
+    for (int i = 0; i < max_index; ++i)
+    {
+        output_image.data[i] = a.data[i] - b.data[i];
+    }
+
+    return output_image;
 }
 
 image make_gx_filter()
 {
-    // TODO
-    return make_image(1,1,1);
+    image filter = make_image(3 , 3 , 1);
+
+    set_pixel(filter, 0, 0, 0, -1);
+    set_pixel(filter, 2, 0, 0, 1);
+    set_pixel(filter, 0, 1, 0, -2);
+    set_pixel(filter, 2, 1, 0, 2);
+    set_pixel(filter, 0, 2, 0, -1);
+    set_pixel(filter, 2, 2, 0, 1);
+
+    return filter;
 }
 
 image make_gy_filter()
 {
-    // TODO
-    return make_image(1,1,1);
+    image filter = make_image(3 , 3 , 1);
+
+    set_pixel(filter, 0, 0,0, -1);
+    set_pixel(filter, 1, 0,0, -2);
+    set_pixel(filter, 2, 0,0, -1);
+    set_pixel(filter, 0, 2,0, 1);
+    set_pixel(filter, 1, 2,0, 2);
+    set_pixel(filter, 2, 2,0, 1);
+
+    return filter;
 }
 
 void feature_normalize(image im)
 {
-    // TODO
+    int max_index = im.w * im.h * im.c;
+    float max = 0;
+    float min = 1;
+
+    for (int i = 0; i < max_index; ++i)
+    {
+        if (im.data[i] > max) max = im.data[i];
+        if (im.data[i] < min) min = im.data[i];
+    }
+
+    float spread = max - min;
+
+    if (spread == 0)
+    {
+        for (int i = 0; i < max_index; ++i)
+        {
+            im.data[i] = 0;
+        }
+    }
+    else
+    {
+        for (int i = 0; i < max_index; ++i)
+        {
+            float new_value = (im.data[i]-min) / (max - min);
+            im.data[i] = new_value;
+        }
+    }
 }
 
 image *sobel_image(image im)
 {
-    // TODO
-    return calloc(2, sizeof(image));
+    image* images = calloc(2, sizeof(image));
+
+    images[0] = make_image(im.w, im.h, 1);
+    images[1] = make_image(im.w, im.h, 1);
+
+    image dx = make_gx_filter();
+    image dy = make_gy_filter();
+
+    image gx = convolve_image(im, dx, 0);
+    image gy = convolve_image(im, dy, 0);
+
+    free_image(dx);
+    free_image(dy);
+
+    for (int i = 0; i < im.c * im.w; ++i)
+    {
+        images[0].data[i] = sqrtf(pow(gx.data[i],2)+pow(gy.data[i],2));
+        images[1].data[i] = atanf(gy.data[i]/gx.data[i]);
+    }
+
+    free_image(gx);
+    free_image(gy);
+
+    return images;
 }
 
 image colorize_sobel(image im)
