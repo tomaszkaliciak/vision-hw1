@@ -268,10 +268,10 @@ image *sobel_image(image im)
     free_image(dx);
     free_image(dy);
 
-    for (int i = 0; i < im.c * im.w; ++i)
+    for (int i = 0; i < im.w * im.h; i++)
     {
-        images[0].data[i] = sqrtf(pow(gx.data[i],2)+pow(gy.data[i],2));
-        images[1].data[i] = atanf(gy.data[i]/gx.data[i]);
+        images[0].data[i] = sqrtf(pow(gx.data[i], 2) + pow(gy.data[i], 2));
+        images[1].data[i] = atan2(gy.data[i], gx.data[i]);
     }
 
     free_image(gx);
@@ -282,6 +282,21 @@ image *sobel_image(image im)
 
 image colorize_sobel(image im)
 {
-    // TODO
-    return make_image(1,1,1);
+    image *sobel = sobel_image(im);
+    clamp_image(sobel[0]);
+
+    image preserve = make_image(im.w, im.h, im.c);
+    image invert = make_image(im.w, im.h, im.c);
+
+    feature_normalize(sobel[0]);
+    for (int xy = 0; xy < im.w*im.h; xy++) {
+        for (int i = 0; i < im.c; i++) {
+            invert.data[xy + i * im.w * im.h] = 1 - im.data[i*im.w*im.h + xy];
+            preserve.data[xy + i * im.w * im.h] = sobel[0].data[xy];
+        }
+    }
+    clamp_image(preserve);
+    image sub = sub_image(preserve, invert);
+    clamp_image(sub);
+    return sub;
 }
